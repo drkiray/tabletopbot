@@ -1,9 +1,11 @@
+import functools
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, ConversationHandler, MessageHandler, filters
 from bot.config import ADMIN_ID
 from bot.database import add_game, delete_game, get_all_games, get_open_poll, cancel_poll
 
 def admin_only(func):
+    @functools.wraps(func)
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.effective_user.id != ADMIN_ID:
             await update.message.reply_text("Нет доступа.")
@@ -24,17 +26,29 @@ async def add_game_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ADD_MIN
 
 async def add_game_min(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["game_min"] = int(update.message.text.strip())
+    try:
+        context.user_data["game_min"] = int(update.message.text.strip())
+    except ValueError:
+        await update.message.reply_text("Пожалуйста, введи число:")
+        return ADD_MIN
     await update.message.reply_text("Максимальное число игроков:")
     return ADD_MAX
 
 async def add_game_max(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["game_max"] = int(update.message.text.strip())
+    try:
+        context.user_data["game_max"] = int(update.message.text.strip())
+    except ValueError:
+        await update.message.reply_text("Пожалуйста, введи число:")
+        return ADD_MAX
     await update.message.reply_text("Сложность (1-10):")
     return ADD_COMPLEXITY
 
 async def add_game_complexity(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    complexity = int(update.message.text.strip())
+    try:
+        complexity = int(update.message.text.strip())
+    except ValueError:
+        await update.message.reply_text("Пожалуйста, введи число от 1 до 10:")
+        return ADD_COMPLEXITY
     name = context.user_data["game_name"]
     add_game(
         name=name,
@@ -63,7 +77,11 @@ async def delete_game_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not args:
         await update.message.reply_text("Использование: /delete_game <id>\nПосмотри ID через /games")
         return
-    game_id = int(args[0])
+    try:
+        game_id = int(args[0])
+    except ValueError:
+        await update.message.reply_text("ID должен быть числом. Посмотри /games")
+        return
     delete_game(game_id)
     await update.message.reply_text(f"Игра #{game_id} удалена.")
 

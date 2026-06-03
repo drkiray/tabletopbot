@@ -93,6 +93,10 @@ async def request_post_session_ratings(context: ContextTypes.DEFAULT_TYPE):
         return
 
     poll = dict(poll)
+    from datetime import date
+    day_map = {"Вторник": 1, "Среда": 2, "Четверг": 3, "Пятница": 4, "Суббота": 5, "Воскресенье": 6}
+    if date.today().weekday() != day_map.get(poll["chosen_day"], -1):
+        return
     attendee_ids = get_confirmed_attendees(poll["id"])
 
     bot_username = (await context.bot.get_me()).username

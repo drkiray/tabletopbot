@@ -9,7 +9,10 @@
    - `ADMIN_ID` — твой Telegram user ID (узнать через @userinfobot)
    - `GROUP_CHAT_ID` — ID группового чата (добавь бота в группу, напиши что-то, получи через @getidsbot)
    - `TZ` — Europe/Moscow (или твой часовой пояс)
-4. Railway автоматически задеплоит бота
+4. Создай Persistent Volume в Railway:
+   - Railway dashboard → Volumes → Add Volume → Mount path: `/data`
+   - Добавь переменную: `DB_PATH=/data/tabletop.db`
+5. Railway автоматически задеплоит бота
 
 ## Команды бота
 
