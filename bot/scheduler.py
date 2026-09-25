@@ -23,18 +23,18 @@ def build_scheduler(app):
         id="open_poll",
     )
 
-    # Friday 23:59 — close poll
+    # Friday 10:00 — close poll
     scheduler.add_job(
         close_weekly_poll,
-        CronTrigger(day_of_week="fri", hour=23, minute=59, timezone=tz),
+        CronTrigger(day_of_week="fri", hour=10, minute=0, timezone=tz),
         args=[app],
         id="close_poll",
     )
 
-    # Saturday & Sunday 10:00 — day-of reminder
+    # Saturday & Sunday 9:00 — day-of reminder
     scheduler.add_job(
         send_day_of_reminder,
-        CronTrigger(day_of_week="sat,sun", hour=10, minute=0, timezone=tz),
+        CronTrigger(day_of_week="sat,sun", hour=9, minute=0, timezone=tz),
         args=[app],
         id="day_of_reminder",
     )

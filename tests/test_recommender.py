@@ -10,7 +10,7 @@ def test_filters_by_player_count():
     ]
     ratings = {1: {1: 9, 2: 8}, 2: {1: 7, 2: 6}}
     result = recommend_games(games, ratings, attendee_count=6)
-    names = [g["name"] for g in result]
+    names = [g["name"] for g, reason in result]
     assert "Маленькая" not in names
     assert "Большая" in names
 
@@ -25,9 +25,9 @@ def test_ranks_by_average_like():
         2: {1: 8,  2: 7, 3: 6},
     }
     result = recommend_games(games, ratings, attendee_count=3)
-    assert result[0]["name"] == "Лучшая"
-    assert result[1]["name"] == "Средняя"
-    assert result[2]["name"] == "Худшая"
+    assert result[0][0]["name"] == "Лучшая"
+    assert result[1][0]["name"] == "Средняя"
+    assert result[2][0]["name"] == "Худшая"
 
 def test_returns_top_5():
     games = [make_game(i, f"Игра {i}", 2, 8) for i in range(1, 10)]
@@ -42,5 +42,5 @@ def test_games_with_no_ratings_included_last():
     ]
     ratings = {1: {1: 9}}
     result = recommend_games(games, ratings, attendee_count=3)
-    assert result[0]["name"] == "Оценённая"
-    assert result[1]["name"] == "Неоценённая"
+    assert result[0][0]["name"] == "Оценённая"
+    assert result[1][0]["name"] == "Неоценённая"

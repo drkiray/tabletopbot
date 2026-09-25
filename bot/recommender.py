@@ -1,22 +1,39 @@
-def recommend_games(games, ratings, attendee_count, top_n=5):
+def recommend_games(games, ratings, attendee_count, attendee_ids=None, top_n=5):
     """
-    games: list of game dicts (id, name, min_players, max_players, complexity)
-    ratings: dict of {user_id: {game_id: like_score}}
-    attendee_count: int
-    Returns top_n games sorted by avg like score among attendees, filtered by player count.
+    Returns list of (game, reason_str) tuples.
+
+    If attendee_ids provided: priority = coverage (desc) → avg_like (desc) → lower complexity.
+    Otherwise: fallback to avg_like across all ratings.
     """
     eligible = [g for g in games if g["min_players"] <= attendee_count <= g["max_players"]]
 
-    def avg_score(game):
+    def score_game(game):
         game_id = game["id"]
-        scores = [
-            user_ratings[game_id]
-            for user_ratings in ratings.values()
-            if game_id in user_ratings
-        ]
-        if not scores:
-            return -1.0
-        return sum(scores) / len(scores)
+        if attendee_ids:
+            raters = [uid for uid in attendee_ids if uid in ratings and game_id in ratings[uid]]
+            coverage = len(raters)
+            avg_like = (sum(ratings[uid][game_id] for uid in raters) / coverage) if raters else 0.0
+        else:
+            scores = [r[game_id] for r in ratings.values() if game_id in r]
+            coverage = len(scores)
+            avg_like = (sum(scores) / coverage) if scores else 0.0
+        return (coverage, avg_like, -game["complexity"])
 
-    ranked = sorted(eligible, key=avg_score, reverse=True)
-    return ranked[:top_n]
+    def build_reason(game, score):
+        coverage, avg_like, _ = score
+        if attendee_ids:
+            n = len(attendee_ids)
+            if coverage == 0:
+                return "никто из группы ещё не играл"
+            elif coverage == n:
+                return f"все играли, средний балл {avg_like:.1f}/10"
+            else:
+                return f"{coverage} из {n} играли, средний балл {avg_like:.1f}/10"
+        else:
+            if avg_like == 0.0:
+                return "нет оценок"
+            return f"средняя оценка {avg_like:.1f}/10 ({coverage} чел.)"
+
+    scored = [(g, score_game(g)) for g in eligible]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return [(g, build_reason(g, s)) for g, s in scored[:top_n]]
