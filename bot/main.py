@@ -40,11 +40,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == ADMIN_ID:
         text += (
             "\n*Команды администратора:*\n"
-            "/add\\_game — добавить игру\n"
+            "/add\_game — добавить игру\n"
             "/games — список всех игр с ID\n"
-            "/delete\\_game <id> — удалить игру\n"
-            "/cancel\\_week — отменить голосование текущей недели\n"
-            "/restart\\_poll — перезапустить голосование (сброс голосов)\n"
+            "/delete\_game <id> — удалить игру\n"
+            "/cancel\_week — отменить голосование текущей недели\n"
+            "/restart\_poll — перезапустить голосование (сброс голосов)\n"
+            "/played — вручную внести игры прошедшей встречи\n"
             "/ratings — рейтинг всех игр по среднему баллу\n"
             "/stats — активность всех участников\n"
             "/stats @username — статистика конкретного участника\n"

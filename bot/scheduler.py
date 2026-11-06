@@ -31,18 +31,22 @@ def build_scheduler(app):
         id="close_poll",
     )
 
-    # Saturday & Sunday 9:00 — day-of reminder
+    # Every possible meeting day (Tue–Sun) 9:00 — day-of reminder.
+    # The handler itself no-ops unless today is the chosen day
+    # of the latest closed poll, so extra firings are harmless.
     scheduler.add_job(
         send_day_of_reminder,
-        CronTrigger(day_of_week="sat,sun", hour=9, minute=0, timezone=tz),
+        CronTrigger(day_of_week="tue-sun", hour=9, minute=0, timezone=tz),
         args=[app],
         id="day_of_reminder",
     )
 
-    # Saturday & Sunday 23:00 — request ratings
+    # Every possible meeting day (Tue–Sun) 23:00 — request post-session ratings.
+    # Previously this ran only on Sat/Sun, which silently skipped
+    # any session held on a weekday (Tue–Fri).
     scheduler.add_job(
         request_post_session_ratings,
-        CronTrigger(day_of_week="sat,sun", hour=23, minute=0, timezone=tz),
+        CronTrigger(day_of_week="tue-sun", hour=23, minute=0, timezone=tz),
         args=[app],
         id="request_ratings",
     )
