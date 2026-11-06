@@ -171,6 +171,46 @@ async def restart_poll_command(update: Update, context: ContextTypes.DEFAULT_TYP
     await update.message.reply_text("✅ Голосование перезапущено!")
 
 @admin_only
+async def played_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Manually start the 'games of the evening' flow for the latest closed poll.
+
+    Fallback for cases where the automatic 23:00 request didn't fire
+    (bot restart, missed schedule) or a past session must be recorded
+    retroactively. Reuses the same awaiting_session flow.
+    """
+    from bot.database import _conn
+    import sqlite3
+
+    with _conn() as conn:
+        conn.row_factory = sqlite3.Row
+        poll = conn.execute(
+            "SELECT * FROM polls WHERE status = 'closed' ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+
+    if not poll:
+        await update.message.reply_text(
+            "Нет завершённых встреч — сначала должно закрыться голосование."
+        )
+        return
+
+    existing = get_session_games(poll["id"])
+    warning = ""
+    if existing:
+        names = ", ".join(g["name"] for g in existing)
+        warning = (
+            f"\n\n⚠️ К этой встрече уже привязаны игры: {names}.\n"
+            "Новые названия добавятся к существующим."
+        )
+
+    context.bot_data["awaiting_session"] = {"poll_id": poll["id"]}
+    await update.message.reply_text(
+        f"🎲 Вносим игры встречи: {poll['chosen_day']}, неделя {poll['week_start']} "
+        f"(poll #{poll['id']}).{warning}\n\n"
+        "Напиши какие игры сыграли — каждую с новой строки или через запятую.\n"
+        "Если игры нет в базе — добавлю автоматически."
+    )
+
+@admin_only
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         users = get_all_users_stats()
@@ -316,6 +356,7 @@ def get_admin_handlers():
         CommandHandler("delete_game", delete_game_command),
         CommandHandler("cancel_week", cancel_week_command),
         CommandHandler("restart_poll", restart_poll_command),
+        CommandHandler("played", played_command),
         CommandHandler("ratings", ratings_command),
         CommandHandler("stats", stats_command),
         get_admin_session_handler(),
